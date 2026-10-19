@@ -72,7 +72,10 @@ export class AylaEditor extends CustomEditor {
 		if (!this.framed) return super.render(total);
 		this.lastBottomBorder = undefined;
 		const inner = super.render(total - 2);
-		if (inner.length < 2) return inner;
+		if (inner.length < 2) {
+			this.framed = false;
+			return inner;
+		}
 		const index = this.lastBottomBorder ? inner.lastIndexOf(this.lastBottomBorder) : -1;
 		const ctx = this.ctx();
 		const usage = (() => {

@@ -315,6 +315,7 @@ export default function aylaFooter(pi: ExtensionAPI) {
 	});
 
 	pi.on("session_shutdown", async (_event, context) => {
+		current = undefined;
 		stopTick();
 		lastProbe = "";
 		working = { active: false, tokensPerSecond: 0 };
@@ -329,6 +330,5 @@ export default function aylaFooter(pi: ExtensionAPI) {
 		} catch {
 			// UI already torn down.
 		}
-		current = undefined;
 	});
 }

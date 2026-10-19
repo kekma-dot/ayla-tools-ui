@@ -166,8 +166,14 @@ test("a session shutdown drops a pending pick instead of switching models", asyn
 	assert.equal(state.customCalls, 1);
 
 	await emit("session_shutdown", ctx);
-	state.customClose("deepseek/flash");
-	await pending;
+	await Promise.race([
+		pending,
+		new Promise((_, reject) => {
+			const timer = setTimeout(() => reject(new Error("shutdown must settle the picker promise")), 500);
+			timer.unref();
+		}),
+	]);
+	state.customClose("deepseek/flash"); // A late selection cannot revive the closed interaction.
 
 	assert.equal(setModelCalls, 0, "a pick from the dead session must not switch models");
 	assert.ok(
@@ -179,8 +185,13 @@ test("a session shutdown drops a pending pick instead of switching models", asyn
 test("a model change that resolves after shutdown cannot notify the old session", async () => {
 	for (const changed of [true, false]) {
 		let resolveChange;
+		let markStarted;
+		const started = new Promise((resolve) => { markStarted = resolve; });
 		const { api, commands, emit } = fakePi({
-			setModel: () => new Promise((resolve) => { resolveChange = resolve; }),
+			setModel: () => new Promise((resolve) => {
+				resolveChange = resolve;
+				markStarted();
+			}),
 		});
 		const extension = (await jiti.import(entry("model-picker.ts"))).default;
 		extension(api);
@@ -188,7 +199,7 @@ test("a model change that resolves after shutdown cannot notify the old session"
 		const pending = commands.get("ayla-model").handler("", ctx);
 		await Promise.resolve();
 		state.customClose("deepseek/flash");
-		await Promise.resolve();
+		await started;
 		assert.equal(typeof resolveChange, "function");
 		await emit("session_shutdown", ctx);
 		resolveChange(changed);

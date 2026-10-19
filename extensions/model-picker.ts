@@ -255,6 +255,7 @@ export default function aylaModelPicker(pi: ExtensionAPI) {
 	// Recent picks belong to this extension instance, not to the process.
 	const recent: string[] = [];
 	let generation = 0;
+	let dismiss: (() => void) | undefined;
 
 	pi.registerCommand("ayla-model", {
 		description: "Model picker overlay (search, recent, provider meta)",
@@ -279,9 +280,14 @@ export default function aylaModelPicker(pi: ExtensionAPI) {
 				return;
 			}
 			const token = generation;
+			let mine: (() => void) | undefined;
 			const picked = await ctx.ui.custom<string | null>(
-				(_tui, theme, keybindings, done) =>
-					new ModelPicker(theme, models, recent, (value) => done(value), keybindings),
+				(_tui, theme, keybindings, done) => {
+					mine = () => done(null);
+					if (token === generation) dismiss = mine;
+					else mine();
+					return new ModelPicker(theme, models, recent, (value) => done(value), keybindings);
+				},
 				{
 					overlay: true,
 					overlayOptions: () => {
@@ -289,7 +295,9 @@ export default function aylaModelPicker(pi: ExtensionAPI) {
 						return { width: live.width, maxHeight: live.maxHeight, anchor: "center", margin: 1 };
 					},
 				},
-			);
+			).finally(() => {
+				if (dismiss === mine) dismiss = undefined;
+			});
 			// A session shutdown or a reload invalidates this resolution.
 			if (token !== generation) return;
 			if (!picked) return;
@@ -314,5 +322,8 @@ export default function aylaModelPicker(pi: ExtensionAPI) {
 
 	pi.on("session_shutdown", async () => {
 		generation += 1;
+		const close = dismiss;
+		dismiss = undefined;
+		close?.();
 	});
 }
