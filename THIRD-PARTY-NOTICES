@@ -1,0 +1,23 @@
+Bundled signal contract
+=======================
+
+extensions/contract.mjs is the exact signal-contract copy distributed in
+kekma-dot/ayla-tools-voice@498139ca1f05254a1ba0bff77ec99e07dd5b3138,
+originally from pi-ayla-contract. Copyright (c) 2026 kekma-dot, MIT.
+SHA-256: b656d8c35d7d8553fa19f328f0fcf5e54d095ddf72a92c3776723ba2438b568b
+The full MIT terms are included in LICENSE. The process-wide signal identity
+is Symbol.for("ayla.footer.signals.v1"); no other package installation is needed.
+
+Host-provided dependencies
+==========================
+
+Pi's coding-agent and TUI packages are peer dependencies, supplied by Pi.
+They are not bundled or relicensed by this repository. Their own licenses
+continue to apply to those separately distributed packages.
+
+Artwork
+-------
+
+assets/banner.png is AI-generated artwork commissioned for Ayla-tools.
+It is offered with this repository without a claim of exclusive ownership
+or guaranteed copyright protection. It is an illustration, not a UI screenshot.
